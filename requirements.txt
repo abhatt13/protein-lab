@@ -19,7 +19,7 @@ biopython==1.83
 py3Dmol==2.0.4
 python-dotenv==1.0.1
 slowapi==0.1.9
-pytest==8.0.0
+pytest==7.4.4
 pytest-asyncio==0.23.4
 httpx==0.26.0
 black==24.1.1

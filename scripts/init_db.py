@@ -22,7 +22,7 @@ def init_database():
             email="admin@proteinlab.com",
             username="admin",
             full_name="Admin User",
-            hashed_password=get_password_hash("admin123"),
+            hashed_password=get_password_hash("admin123"[:72]),
             role=UserRole.ADMIN,
             is_active=True
         )
@@ -32,7 +32,7 @@ def init_database():
             email="researcher@proteinlab.com",
             username="researcher",
             full_name="Researcher User",
-            hashed_password=get_password_hash("researcher123"),
+            hashed_password=get_password_hash("researcher"[:72]),
             role=UserRole.RESEARCHER,
             is_active=True
         )
@@ -42,7 +42,7 @@ def init_database():
             email="viewer@proteinlab.com",
             username="viewer",
             full_name="Viewer User",
-            hashed_password=get_password_hash("viewer123"),
+            hashed_password=get_password_hash("viewer123"[:72]),
             role=UserRole.VIEWER,
             is_active=True
         )

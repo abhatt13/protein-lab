@@ -1,4 +1,7 @@
 import streamlit as st
+import requests
+
+API_URL = "http://localhost:8000"
 
 st.set_page_config(
     page_title="Protein Lab",
@@ -63,7 +66,22 @@ with st.sidebar:
                 submit = st.form_submit_button("Login")
 
                 if submit:
-                    st.info("Login functionality will be connected to API")
+                    try:
+                        response = requests.post(
+                            f"{API_URL}/api/auth/login",
+                            data={"username": username, "password": password}
+                        )
+                        if response.status_code == 200:
+                            data = response.json()
+                            st.session_state.authenticated = True
+                            st.session_state.user = username
+                            st.session_state.token = data["access_token"]
+                            st.success("Login successful!")
+                            st.rerun()
+                        else:
+                            st.error("Invalid credentials")
+                    except Exception as e:
+                        st.error(f"Login failed: {str(e)}")
 
         with tab2:
             with st.form("register_form"):
@@ -75,7 +93,23 @@ with st.sidebar:
                 submit = st.form_submit_button("Register")
 
                 if submit:
-                    st.info("Registration functionality will be connected to API")
+                    try:
+                        response = requests.post(
+                            f"{API_URL}/api/auth/register",
+                            json={
+                                "email": email,
+                                "username": username,
+                                "full_name": full_name,
+                                "password": password,
+                                "role": role
+                            }
+                        )
+                        if response.status_code == 200:
+                            st.success("Registration successful! Please login.")
+                        else:
+                            st.error(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+                    except Exception as e:
+                        st.error(f"Registration failed: {str(e)}")
     else:
         st.success(f"Welcome, {st.session_state.user}!")
         if st.button("Logout"):
