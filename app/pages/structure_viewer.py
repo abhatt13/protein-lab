@@ -1,5 +1,7 @@
 import streamlit as st
 import streamlit.components.v1 as components
+import requests
+import py3Dmol
 
 st.set_page_config(page_title="3D Structure Viewer", page_icon="🎨", layout="wide")
 
@@ -40,42 +42,85 @@ with col1:
 with col2:
     st.markdown("#### Structure Visualization")
 
-    st.info("3D viewer will be implemented using py3Dmol")
-    st.markdown("""
-    **Features:**
-    - Interactive 3D rotation and zoom
-    - Multiple visualization styles
-    - Color schemes by chain, atom, or secondary structure
-    - Label display for residues and atoms
-    - Surface representation
-    - Export as image or video
-    """)
+    pdb_code = "1A7F"
+    if pdb_source == "From Database":
+        pdb_code = protein_select.split("(")[1].strip(")")
+    elif pdb_source == "Fetch from RCSB" and 'pdb_id' in locals() and pdb_id:
+        pdb_code = pdb_id.upper()
 
-    placeholder = st.empty()
-    with placeholder.container():
-        st.markdown("*3D structure will appear here*")
-        st.markdown("**Example controls:**")
-        st.markdown("- Left click + drag: Rotate")
-        st.markdown("- Scroll: Zoom")
-        st.markdown("- Right click + drag: Pan")
+    try:
+        pdb_url = f"https://files.rcsb.org/download/{pdb_code}.pdb"
+        response = requests.get(pdb_url)
+
+        if response.status_code == 200:
+            pdb_data = response.text
+
+            xyzview = py3Dmol.view(width=800, height=600)
+            xyzview.addModel(pdb_data, 'pdb')
+
+            style_mapping = {
+                "Cartoon": "cartoon",
+                "Stick": "stick",
+                "Sphere": "sphere",
+                "Surface": "surface",
+                "Line": "line"
+            }
+
+            color_mapping = {
+                "Spectrum": "spectrum",
+                "Chain": "chain",
+                "Secondary Structure": "ss",
+                "Atom Type": "element"
+            }
+
+            xyzview.setStyle({style_mapping[style]: {'color': color_mapping[color_scheme]}})
+
+            if show_surface:
+                xyzview.addSurface(py3Dmol.VDW, {'opacity': 0.7})
+
+            xyzview.setBackgroundColor(bg_color)
+            xyzview.zoomTo()
+
+            html = xyzview._make_html()
+            components.html(html, height=600, scrolling=False)
+
+            st.info("Left click + drag: Rotate | Scroll: Zoom | Right click + drag: Pan")
+        else:
+            st.error(f"Failed to fetch PDB structure for {pdb_code}")
+    except Exception as e:
+        st.error(f"Error loading structure: {str(e)}")
 
 st.markdown("---")
 
 st.markdown("### Structure Information")
 
-col1, col2, col3 = st.columns(3)
+try:
+    info_url = f"https://data.rcsb.org/rest/v1/core/entry/{pdb_code}"
+    info_response = requests.get(info_url)
 
-with col1:
-    st.markdown("**PDB ID:** 1A7F")
-    st.markdown("**Resolution:** 1.8 Å")
-    st.markdown("**Method:** X-ray Diffraction")
+    if info_response.status_code == 200:
+        info = info_response.json()
 
-with col2:
-    st.markdown("**Chains:** 2")
-    st.markdown("**Residues:** 110")
-    st.markdown("**Atoms:** 788")
+        col1, col2, col3 = st.columns(3)
 
-with col3:
-    st.markdown("**R-value:** 0.189")
-    st.markdown("**Released:** 1998-07-28")
-    st.markdown("**Authors:** Baker et al.")
+        with col1:
+            st.markdown(f"**PDB ID:** {pdb_code}")
+            resolution = info.get('rcsb_entry_info', {}).get('resolution_combined', ['N/A'])[0] if isinstance(info.get('rcsb_entry_info', {}).get('resolution_combined'), list) else info.get('rcsb_entry_info', {}).get('resolution_combined', 'N/A')
+            st.markdown(f"**Resolution:** {resolution} Å" if resolution != 'N/A' else "**Resolution:** N/A")
+            method = info.get('exptl', [{}])[0].get('method', 'N/A') if info.get('exptl') else 'N/A'
+            st.markdown(f"**Method:** {method}")
+
+        with col2:
+            polymer_count = info.get('rcsb_entry_info', {}).get('polymer_entity_count', 'N/A')
+            st.markdown(f"**Chains:** {polymer_count}")
+            st.markdown(f"**Molecular Weight:** {info.get('rcsb_entry_info', {}).get('molecular_weight', 'N/A')}")
+
+        with col3:
+            release_date = info.get('rcsb_accession_info', {}).get('initial_release_date', 'N/A')
+            st.markdown(f"**Released:** {release_date[:10] if release_date != 'N/A' else 'N/A'}")
+            deposit_date = info.get('rcsb_accession_info', {}).get('deposit_date', 'N/A')
+            st.markdown(f"**Deposited:** {deposit_date[:10] if deposit_date != 'N/A' else 'N/A'}")
+    else:
+        st.warning("Structure information not available")
+except Exception as e:
+    st.warning(f"Could not fetch structure information")
