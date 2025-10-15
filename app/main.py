@@ -77,7 +77,7 @@ with st.sidebar:
                             st.session_state.user = username
                             st.session_state.token = data["access_token"]
                             st.success("Login successful!")
-                            st.rerun()
+                            st.experimental_rerun()
                         else:
                             st.error("Invalid credentials")
                     except Exception as e:
@@ -116,4 +116,4 @@ with st.sidebar:
             st.session_state.authenticated = False
             st.session_state.user = None
             st.session_state.token = None
-            st.rerun()
+            st.experimental_rerun()
