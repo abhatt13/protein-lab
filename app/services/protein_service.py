@@ -10,12 +10,12 @@ from app.services.audit_service import AuditService
 class ProteinService:
     @staticmethod
     def create_protein(db: Session, protein: ProteinCreate, user: User) -> Protein:
-        db_protein = Protein(
-            **protein.model_dump(),
-            created_by=user.id,
-            updated_by=user.id,
-            length=len(protein.sequence) if protein.sequence else None
-        )
+        protein_data = protein.model_dump()
+        protein_data['length'] = len(protein.sequence) if protein.sequence else None
+        protein_data['created_by'] = user.id
+        protein_data['updated_by'] = user.id
+
+        db_protein = Protein(**protein_data)
         db.add(db_protein)
         db.flush()
 
