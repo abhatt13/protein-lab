@@ -28,47 +28,68 @@ A comprehensive protein database management platform with AI-powered analytics, 
 - **Visualization**: Plotly, py3Dmol
 - **Deployment**: Docker, Docker Compose
 
-## Setup
+## Quick Start
 
 ```bash
-# Clone repository
 git clone <repository-url>
 cd protein-lab
-
-# Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set up environment variables
 cp .env.example .env
-# Edit .env with your configuration
+docker-compose up -d
+docker-compose exec api python scripts/init_db.py
+```
 
-# Run database migrations
-alembic upgrade head
+Visit:
+- Streamlit UI: http://localhost:8501
+- API Docs: http://localhost:8000/docs
 
-# Start the application
-docker-compose up
+Default credentials: `admin` / `admin123`
+
+## Documentation
+
+- [Installation Guide](docs/INSTALLATION.md)
+- [API Documentation](docs/API.md)
+- [User Guide](docs/USER_GUIDE.md)
+- [Deployment Guide](docs/DEPLOYMENT.md)
+
+## Project Structure
+
+```
+protein-lab/
+├── app/
+│   ├── api/           # FastAPI endpoints
+│   ├── core/          # Config, database, security
+│   ├── models/        # SQLAlchemy models
+│   ├── schemas/       # Pydantic schemas
+│   ├── services/      # Business logic
+│   ├── utils/         # Utilities, validators
+│   ├── ui/            # Streamlit pages
+│   └── main.py        # Streamlit entry point
+├── tests/             # Unit and integration tests
+├── scripts/           # Database initialization
+├── docs/              # Documentation
+├── alembic/           # Database migrations
+├── docker-compose.yml # Docker orchestration
+└── requirements.txt   # Python dependencies
 ```
 
 ## Development
 
 ```bash
-# Run tests
-pytest
-
-# Run with hot reload
-streamlit run app/main.py
-
-# Format code
-black .
-isort .
-
-# Type checking
-mypy .
+pytest                      # Run tests
+black .                     # Format code
+isort .                     # Sort imports
+mypy .                      # Type checking
+streamlit run app/main.py   # Run Streamlit
+uvicorn app.api.main:app --reload  # Run API
 ```
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/name`)
+3. Commit changes (`git commit -m 'Add feature'`)
+4. Push to branch (`git push origin feature/name`)
+5. Open Pull Request
 
 ## License
 
